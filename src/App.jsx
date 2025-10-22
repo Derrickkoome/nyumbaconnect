@@ -1,13 +1,25 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import Navbar from './components/layout/Navbar'
+import Dashboard from './pages/Dashboard'
+import Properties from './pages/Properties'
+import Tenants from './pages/Tenants'
+import Payments from './pages/Payments'
+import Login from './pages/Login'
+
 function App() {
   return (
-    <div className="min-h-screen bg-gray-50"> 
-      <h1 className="text-3xl font-bold text-center pt-10">
-        Nyumba Connect
-      </h1>
-      <p className="text-center text-gray-600 mt-2">
-        Landlord-Tenant Management Portal
-      </p>
-    </div>
+    <Router>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/properties" element={<Properties />} />
+          <Route path="/tenants" element={<Tenants />} />
+          <Route path="/payments" element={<Payments />} />
+          <Route path="/login" element={<Login />} />
+        </Routes>
+      </div>
+    </Router>
   )
 }
 
