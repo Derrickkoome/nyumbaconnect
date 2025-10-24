@@ -8,15 +8,17 @@ import {
   deleteDoc,
   query,
   where,
-  serverTimestamp 
+  serverTimestamp,
+  increment
 } from 'firebase/firestore'
 import { db } from './firebase'
 
 const tenantsCollection = collection(db, 'tenants')
 
-// Create a new tenant
+// Create a new tenant and update property occupancy
 export const createTenant = async (tenantData, landlordId) => {
   try {
+    // Add tenant
     const docRef = await addDoc(tenantsCollection, {
       ...tenantData,
       landlordId,
@@ -25,6 +27,14 @@ export const createTenant = async (tenantData, landlordId) => {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     })
+    
+    // Update property occupiedUnits count
+    const propertyRef = doc(db, 'properties', tenantData.propertyId)
+    await updateDoc(propertyRef, {
+      occupiedUnits: increment(1),
+      updatedAt: serverTimestamp()
+    })
+    
     return { id: docRef.id, error: null }
   } catch (error) {
     return { id: null, error: error.message }
@@ -78,24 +88,60 @@ export const getTenantById = async (tenantId) => {
 }
 
 // Update a tenant
-export const updateTenant = async (tenantId, tenantData) => {
+export const updateTenant = async (tenantId, tenantData, oldPropertyId) => {
   try {
     const docRef = doc(db, 'tenants', tenantId)
     await updateDoc(docRef, {
       ...tenantData,
       updatedAt: serverTimestamp()
     })
+    
+    // If property changed, update occupancy counts
+    if (oldPropertyId && tenantData.propertyId && oldPropertyId !== tenantData.propertyId) {
+      // Decrease old property count
+      const oldPropertyRef = doc(db, 'properties', oldPropertyId)
+      await updateDoc(oldPropertyRef, {
+        occupiedUnits: increment(-1),
+        updatedAt: serverTimestamp()
+      })
+      
+      // Increase new property count
+      const newPropertyRef = doc(db, 'properties', tenantData.propertyId)
+      await updateDoc(newPropertyRef, {
+        occupiedUnits: increment(1),
+        updatedAt: serverTimestamp()
+      })
+    }
+    
     return { error: null }
   } catch (error) {
     return { error: error.message }
   }
 }
 
-// Delete a tenant
+// Delete a tenant and update property occupancy
 export const deleteTenant = async (tenantId) => {
   try {
-    const docRef = doc(db, 'tenants', tenantId)
-    await deleteDoc(docRef)
+    // Get tenant data first to know which property to update
+    const tenantDocRef = doc(db, 'tenants', tenantId)
+    const tenantDoc = await getDoc(tenantDocRef)
+    
+    if (tenantDoc.exists()) {
+      const tenantData = tenantDoc.data()
+      
+      // Delete tenant
+      await deleteDoc(tenantDocRef)
+      
+      // Update property occupiedUnits count
+      if (tenantData.propertyId) {
+        const propertyRef = doc(db, 'properties', tenantData.propertyId)
+        await updateDoc(propertyRef, {
+          occupiedUnits: increment(-1),
+          updatedAt: serverTimestamp()
+        })
+      }
+    }
+    
     return { error: null }
   } catch (error) {
     return { error: error.message }
