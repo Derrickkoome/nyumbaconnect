@@ -39,8 +39,8 @@ cd nyumbaconnect
 # Install dependencies
 npm install
 
-# Create .env file from example
-cp .env.example .env
+# Create .env file
+cp .env
 # Add your Firebase credentials to .env
 
 # Run development server
