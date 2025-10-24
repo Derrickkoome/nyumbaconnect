@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { getPropertiesByLandlord } from '../services/propertyService'
 import { getTenantsByLandlord } from '../services/tenantService'
+import { getPaymentStats } from '../services/paymentService'
 
 function Dashboard() {
   const { currentUser } = useAuth()
@@ -10,7 +11,9 @@ function Dashboard() {
     totalUnits: 0,
     occupiedUnits: 0,
     activeTenants: 0,
-    totalBalance: 0
+    totalBalance: 0,
+    monthlyRevenue: 0,
+    totalRevenue: 0
   })
   const [loading, setLoading] = useState(true)
 
@@ -29,10 +32,13 @@ function Dashboard() {
     const tenantsResult = await getTenantsByLandlord(currentUser.uid)
     const tenants = tenantsResult.tenants || []
     
+    // Load payment stats
+    const paymentStatsResult = await getPaymentStats(currentUser.uid)
+    
     // Calculate statistics
     const totalProperties = properties.length
     const totalUnits = properties.reduce((sum, p) => sum + p.totalUnits, 0)
-    const occupiedUnits = properties.reduce((sum, p) => sum + p.occupiedUnits, 0)
+    const occupiedUnits = properties.reduce((sum, p) => sum + (p.occupiedUnits || 0), 0)
     const activeTenants = tenants.filter(t => t.status === 'active').length
     const totalBalance = tenants.reduce((sum, t) => sum + (t.currentBalance || 0), 0)
     
@@ -41,7 +47,9 @@ function Dashboard() {
       totalUnits,
       occupiedUnits,
       activeTenants,
-      totalBalance
+      totalBalance,
+      monthlyRevenue: paymentStatsResult.monthlyRevenue || 0,
+      totalRevenue: paymentStatsResult.totalRevenue || 0
     })
     
     setLoading(false)
@@ -128,7 +136,40 @@ function Dashboard() {
         </div>
       </div>
 
+      {/* Revenue Section */}
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Revenue Overview</h2>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg">
+              <div>
+                <p className="text-sm text-gray-600">This Month's Revenue</p>
+                <p className="text-2xl font-bold text-green-600">
+                  KES {stats.monthlyRevenue.toLocaleString()}
+                </p>
+              </div>
+              <div className="text-green-600">
+                <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+              </div>
+            </div>
+            <div className="flex justify-between items-center p-4 bg-indigo-50 rounded-lg">
+              <div>
+                <p className="text-sm text-gray-600">Total Revenue</p>
+                <p className="text-2xl font-bold text-indigo-600">
+                  KES {stats.totalRevenue.toLocaleString()}
+                </p>
+              </div>
+              <div className="text-indigo-600">
+                <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Occupancy Overview</h2>
           <div className="space-y-4">
@@ -160,19 +201,6 @@ function Dashboard() {
                 </p>
               </div>
             </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h2>
-          <p className="text-gray-600">No recent activity to display.</p>
-          <div className="mt-4 text-sm text-gray-500">
-            <p>Activity will appear here when:</p>
-            <ul className="list-disc list-inside mt-2 space-y-1">
-              <li>Tenants make payments</li>
-              <li>New tenants are added</li>
-              <li>Properties are updated</li>
-            </ul>
           </div>
         </div>
       </div>
