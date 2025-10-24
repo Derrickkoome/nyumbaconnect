@@ -20,6 +20,7 @@ export const createProperty = async (propertyData, landlordId) => {
     const docRef = await addDoc(propertiesCollection, {
       ...propertyData,
       landlordId,
+      occupiedUnits: 0, // Always initialize to 0
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     })
@@ -36,7 +37,12 @@ export const getPropertiesByLandlord = async (landlordId) => {
     const querySnapshot = await getDocs(q)
     const properties = []
     querySnapshot.forEach((doc) => {
-      properties.push({ id: doc.id, ...doc.data() })
+      const data = doc.data()
+      properties.push({ 
+        id: doc.id, 
+        ...data,
+        occupiedUnits: data.occupiedUnits ?? 0 // Ensure it's never undefined
+      })
     })
     return { properties, error: null }
   } catch (error) {
@@ -51,7 +57,15 @@ export const getPropertyById = async (propertyId) => {
     const docSnap = await getDoc(docRef)
     
     if (docSnap.exists()) {
-      return { property: { id: docSnap.id, ...docSnap.data() }, error: null }
+      const data = docSnap.data()
+      return { 
+        property: { 
+          id: docSnap.id, 
+          ...data,
+          occupiedUnits: data.occupiedUnits ?? 0 
+        }, 
+        error: null 
+      }
     } else {
       return { property: null, error: 'Property not found' }
     }
