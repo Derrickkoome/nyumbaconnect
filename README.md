@@ -2,20 +2,20 @@
 
 A modern web application for landlords and tenants to manage rental properties, track payments, and communicate effectively.
 
-## 🚀 Live Demo
+## Live Demo
 
 **[View Live Application](https://nyumbaconnect-36c88.web.app)**
 
-## 📱 Features
+## Features
 
-- ✅ **Authentication** - Secure login with email/password and Google Sign-in
-- ✅ **Properties Management** - Add, edit, and track rental properties
-- ✅ **Tenants Management** - Manage tenant information and assignments
-- ✅ **Dashboard** - Real-time statistics and occupancy tracking
-- 🚧 **Payments System** - Coming soon
-- 🚧 **Receipt Generation** - Coming soon
+- **Authentication** - Secure login with email/password and Google Sign-in
+- **Properties Management** - Add, edit, and track rental properties
+- **Tenants Management** - Manage tenant information and assignments
+- **Dashboard** - Real-time statistics and occupancy tracking
+- **Payments System** - Coming soon
+- **Receipt Generation** - Coming soon
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - React 18 + Vite
 - Tailwind CSS v4
@@ -23,7 +23,7 @@ A modern web application for landlords and tenants to manage rental properties, 
 - React Router v6
 - GitHub Actions (CI/CD)
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js 18 or higher
@@ -65,37 +65,34 @@ Manual deployment:
 firebase deploy --only hosting
 ```
 
-## 📈 Development Progress
+## Development Progress
 
 **Completed:**
-- ✅ Project Setup & Configuration
-- ✅ Firebase Integration
-- ✅ Authentication System (Email/Password + Google)
-- ✅ Properties CRUD Operations
-- ✅ Tenants CRUD Operations
-- ✅ Dashboard with Statistics
-- ✅ Responsive Design
-- ✅ CI/CD with GitHub Actions
+- Project Setup & Configuration
+- Firebase Integration
+- Authentication System (Email/Password + Google)
+- Properties CRUD Operations
+- Tenants CRUD Operations
+- Dashboard with Statistics
+- Responsive Design
+- CI/CD with GitHub Actions
 
 **In Progress:**
-- 🚧 Payments Tracking System
+- Payments Tracking System
 
 **Upcoming:**
-- 📋 Receipt Generation
-- 🔔 Notifications & Reminders
-- 📊 Reports & Analytics
-- 👤 User Roles (Landlord/Tenant views)
-- 💳 M-Pesa Integration
+- Receipt Generation
+- Notifications & Reminders
+- Reports & Analytics
+- User Roles (Landlord/Tenant views)
+- M-Pesa Integration
 
-## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome!
-
-## 📝 License
+## License
 
 MIT
 
-## 👨‍💻 Author
+## Author
 
 **Derrick Koome**
 - GitHub: [@Derrickkoome](https://github.com/Derrickkoome)
