@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext'
 import { getPropertiesByLandlord } from '../services/propertyService'
 import { getTenantsByLandlord } from '../services/tenantService'
 import { getPaymentStats } from '../services/paymentService'
+import { collection, getDocs, doc, updateDoc, query, where } from 'firebase/firestore'
+import { db } from '../services/firebase'
 
 function Dashboard() {
   const { currentUser } = useAuth()
@@ -16,6 +18,8 @@ function Dashboard() {
     totalRevenue: 0
   })
   const [loading, setLoading] = useState(true)
+  const [fixing, setFixing] = useState(false)
+  const [message, setMessage] = useState('')
 
   useEffect(() => {
     loadStats()
@@ -24,18 +28,14 @@ function Dashboard() {
   const loadStats = async () => {
     setLoading(true)
     
-    // Load properties
     const propertiesResult = await getPropertiesByLandlord(currentUser.uid)
     const properties = propertiesResult.properties || []
     
-    // Load tenants
     const tenantsResult = await getTenantsByLandlord(currentUser.uid)
     const tenants = tenantsResult.tenants || []
     
-    // Load payment stats
     const paymentStatsResult = await getPaymentStats(currentUser.uid)
     
-    // Calculate statistics
     const totalProperties = properties.length
     const totalUnits = properties.reduce((sum, p) => sum + p.totalUnits, 0)
     const occupiedUnits = properties.reduce((sum, p) => sum + (p.occupiedUnits || 0), 0)
@@ -55,6 +55,66 @@ function Dashboard() {
     setLoading(false)
   }
 
+  const recalculateOccupancy = async (landlordId) => {
+    try {
+      console.log('Starting occupancy recalculation...')
+      
+      const propertiesRef = collection(db, 'properties')
+      const propertiesQuery = query(propertiesRef, where('landlordId', '==', landlordId))
+      const propertiesSnapshot = await getDocs(propertiesQuery)
+      
+      const tenantsRef = collection(db, 'tenants')
+      const tenantsQuery = query(tenantsRef, where('landlordId', '==', landlordId))
+      const tenantsSnapshot = await getDocs(tenantsQuery)
+      
+      const tenantCounts = {}
+      tenantsSnapshot.forEach((docSnap) => {
+        const tenant = docSnap.data()
+        if (tenant.status === 'active') {
+          const propId = tenant.propertyId
+          tenantCounts[propId] = (tenantCounts[propId] || 0) + 1
+        }
+      })
+      
+      console.log('Tenant counts:', tenantCounts)
+      
+      let updatedCount = 0
+      for (const docSnap of propertiesSnapshot.docs) {
+        const property = docSnap.data()
+        const correctCount = tenantCounts[docSnap.id] || 0
+        
+        console.log(`Property: ${property.name} - Setting to ${correctCount}`)
+        
+        await updateDoc(doc(db, 'properties', docSnap.id), {
+          occupiedUnits: correctCount
+        })
+        
+        updatedCount++
+      }
+      
+      console.log(`Successfully updated ${updatedCount} properties`)
+      return { success: true, message: `Updated ${updatedCount} properties` }
+    } catch (error) {
+      console.error('Error recalculating occupancy:', error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  const handleFixOccupancy = async () => {
+    setFixing(true)
+    setMessage('')
+    console.log('Fixing occupancy for landlord:', currentUser.uid)
+    const result = await recalculateOccupancy(currentUser.uid)
+    if (result.success) {
+      setMessage('✓ Occupancy counts fixed successfully!')
+      await loadStats()
+      setTimeout(() => setMessage(''), 5000)
+    } else {
+      setMessage('✗ Failed to fix occupancy: ' + result.error)
+    }
+    setFixing(false)
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -65,14 +125,34 @@ function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Welcome back, {currentUser?.displayName || 'User'}!
-        </h1>
-        <p className="mt-2 text-gray-600">
-          Here's what's happening with your properties today.
-        </p>
+      <div className="mb-8 flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Welcome back, {currentUser?.displayName || 'User'}!
+          </h1>
+          <p className="mt-2 text-gray-600">
+            Here's what's happening with your properties today.
+          </p>
+        </div>
+        
+        <button
+          onClick={handleFixOccupancy}
+          disabled={fixing}
+          className="bg-yellow-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {fixing ? 'Fixing...' : '🔧 Fix Occupancy'}
+        </button>
       </div>
+
+      {message && (
+        <div className={`mb-4 px-4 py-3 rounded ${
+          message.startsWith('✓') 
+            ? 'bg-green-50 border border-green-200 text-green-600' 
+            : 'bg-red-50 border border-red-200 text-red-600'
+        }`}>
+          {message}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-lg shadow">
@@ -136,7 +216,6 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Revenue Section */}
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Revenue Overview</h2>
