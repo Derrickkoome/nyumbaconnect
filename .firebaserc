@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "nyumbaconnect-36c88"
-  }
+    "default": "nyumbaconnect-36c88",
+    "nyumbaconnect\t": "nyumbaconnect-36c88"
+  },
+  "targets": {},
+  "etags": {}
 }

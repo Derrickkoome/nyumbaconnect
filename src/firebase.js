@@ -21,6 +21,12 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID?.trim(),
 };
 
+// TEMPORARY DEBUG - Remove after testing
+console.log('🔥 Firebase Config:', {
+  apiKey: firebaseConfig.apiKey?.substring(0, 10) + '...',
+  projectId: firebaseConfig.projectId,
+});
+
 if (!firebaseConfig.apiKey) {
   throw new Error('Missing VITE_FIREBASE_API_KEY. Check your .env and rebuild/restart.');
 }
