@@ -2,7 +2,7 @@
 
 A comprehensive property management solution built specifically for the Kenyan rental market. This modern web application empowers landlords to efficiently manage rental properties, track tenant information, record payments, and generate comprehensive reports. With a clean, responsive interface and real-time synchronization via Firebase, NyumbaConnect streamlines the entire property management workflow.
 
-🔗 **[View Live Application](https://nyumbaconnect-36c88.web.app)**
+🔗 **[View Live Application](https://nyumbaconnect-new.web.app)**
 
 ## Key Features
 
